@@ -1,0 +1,55 @@
+ 
+
+ 
+
+Invoice
+
+Invoice number RXNIRD06-0007
+Date of issue January 21, 2026
+Date due January 21, 2026
+
+OpenAIl Ireland Limited
+
+1st Floor, The Liffey Trust Center
+117 - 126 Sheriff Street Upper
+Dublin
+
+Co. Dublin
+
+DO1 YC43
+
+Ireland
+
+ar@openai.com
+
+IE VAT IE4143435AH
+
+€56.18 due January 21, 2026
+
+OpenAl
+
+Bill to
+
+VDS CONSULTORIA BV
+Boslaan 19
+
+2820 Bonheiden
+
+Belgium
+invoice@vdsconsultoria.com
+BE VAT BEO896505771
+
+ 
+
+Pay online
+Description Qty Unit price Tax Amount
+ChatGPT Business Subscription 2 €28.09 0%" €56.18
+Jan 21 - Feb 21, 2026
+Subtotal €56.18
+Total €56.18
+Amount due €56.18
+
+[1] Tax to be paid on reverse charge basis
+
+Page 1 of 1
+

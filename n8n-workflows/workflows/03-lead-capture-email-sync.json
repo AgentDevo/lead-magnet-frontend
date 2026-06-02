@@ -1,0 +1,369 @@
+{
+  "name": "03 - Lead Capture & Email Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "lead-capture",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1e8f2d3a-5c7b-4d8e-9f0a-1b2c3d4e5f6a",
+      "name": "Webhook - Lead Capture",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "leads",
+        "columns": "id,user_id,lead_magnet_id,email,status,created_at",
+        "data": "id={{$uuid()}}\nuser_id={{$node[\\\"Webhook - Lead Capture\\\"].json.user_id}}\nlead_magnet_id={{$node[\\\"Webhook - Lead Capture\\\"].json.lead_magnet_id}}\nemail={{$node[\\\"Webhook - Lead Capture\\\"].json.email}}\nstatus=new\ncreated_at={{new Date().toISOString()}}",
+        "options": {}
+      },
+      "id": "5f7e8d9c-0a1b-2c3d-4e5f-6a7b8c9d0e1f",
+      "name": "Store Lead in Supabase",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "{{$node[\\\"Webhook - Lead Capture\\\"].json.email}}",
+        "subject": "Welcome! Your Lead Magnet is Ready",
+        "html": true,
+        "htmlContent": "<h2>Welcome!</h2>\n<p>Hi,</p>\n<p>Thank you for downloading our lead magnet. We're excited to share valuable insights with you.</p>\n<p><a href='https://app.example.com/download?id={{$node[\\\"Webhook - Lead Capture\\\"].json.lead_magnet_id}}' style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>Download Now</a></p>\n<p>You'll also receive helpful content and updates directly to your inbox.</p>\n<p>Thanks for joining us!</p>",
+        "options": {}
+      },
+      "id": "7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        750,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": "public",
+        "table": "user_integrations",
+        "where": "user_id = {{$node[\\\"Webhook - Lead Capture\\\"].json.user_id}}",
+        "limit": 10
+      },
+      "id": "8c9d0e1f-2a3b-4c5d-6e7f-8a9b0c1d2e3f",
+      "name": "Fetch User Integrations",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        750,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "https://us1.api.mailchimp.com/3.0/lists/{{$node[\\\"Fetch User Integrations\\\"].json[0].mailchimp_list_id}}/members",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "jsonBody": true,
+        "jsonData": "{\n  \"email_address\": \"{{$node[\\\"Webhook - Lead Capture\\\"].json.email}}\",\n  \"status\": \"subscribed\",\n  \"merge_fields\": {\n    \"FNAME\": \"{{$node[\\\"Webhook - Lead Capture\\\"].json.first_name || 'Subscriber'}}\",\n    \"LNAME\": \"{{$node[\\\"Webhook - Lead Capture\\\"].json.last_name || ''}}\",\n    \"MAGNET\": \"{{$node[\\\"Webhook - Lead Capture\\\"].json.lead_magnet_id}}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "9d0e1f2a-3b4c-5d6e-7f8a-9b0c1d2e3f4a",
+      "name": "Sync to Mailchimp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1000,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "https://api.convertkit.com/v3/subscribers",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "jsonBody": true,
+        "jsonData": "{\n  \"email\": \"{{$node[\\\"Webhook - Lead Capture\\\"].json.email}}\",\n  \"first_name\": \"{{$node[\\\"Webhook - Lead Capture\\\"].json.first_name || 'Subscriber'}}\",\n  \"api_secret\": \"{{$env.CONVERTKIT_API_SECRET}}\",\n  \"fields\": {\n    \"lead_magnet_id\": \"{{$node[\\\"Webhook - Lead Capture\\\"].json.lead_magnet_id}}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "1b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e",
+      "name": "Sync to ConvertKit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "jsonBody": true,
+        "jsonData": "{\n  \"properties\": [\n    {\n      \"name\": \"email\",\n      \"value\": \"{{$node[\\\"Webhook - Lead Capture\\\"].json.email}}\"\n    },\n    {\n      \"name\": \"firstname\",\n      \"value\": \"{{$node[\\\"Webhook - Lead Capture\\\"].json.first_name || 'Subscriber'}}\"\n    },\n    {\n      \"name\": \"lastname\",\n      \"value\": \"{{$node[\\\"Webhook - Lead Capture\\\"].json.last_name || ''}}\"\n    },\n    {\n      \"name\": \"lead_magnet_id\",\n      \"value\": \"{{$node[\\\"Webhook - Lead Capture\\\"].json.lead_magnet_id}}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "2c3d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f",
+      "name": "Sync to HubSpot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1000,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "activity_log",
+        "columns": "id,user_id,action,entity_type,entity_id,details,created_at",
+        "data": "id={{$uuid()}}\nuser_id={{$node[\\\"Webhook - Lead Capture\\\"].json.user_id}}\naction=lead_captured\nentity_type=lead\nentity_id={{$node[\\\"Store Lead in Supabase\\\"].json[0].id}}\ndetails={\\\"email\\\":\\\"{{$node[\\\"Webhook - Lead Capture\\\"].json.email}}\\\",\\\"source\\\":\\\"{{$node[\\\"Webhook - Lead Capture\\\"].json.source}}\\\"}\ncreated_at={{new Date().toISOString()}}",
+        "options": {}
+      },
+      "id": "3d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a",
+      "name": "Log Activity",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        650
+      ]
+    },
+    {
+      "parameters": {
+        "responseCode": 200,
+        "responseData": "={\n  \"success\": true,\n  \"lead\": {\n    \"id\": \"$node[\\\"Store Lead in Supabase\\\"].json[0].id\",\n    \"email\": \"$node[\\\"Webhook - Lead Capture\\\"].json.email\",\n    \"status\": \"captured\"\n  },\n  \"message\": \"Lead captured and synced successfully\"\n}"
+      },
+      "id": "4e5f6a7b-8c9d-0e1f-2a3b-4c5d-6e7f-8a9b",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "sync_retry_queue",
+        "columns": "id,lead_id,integration_type,status,error_message,retry_count,created_at,next_retry_at",
+        "data": "id={{$uuid()}}\nlead_id={{$node[\\\"Store Lead in Supabase\\\"].json[0].id}}\nintegration_type={{$node[\\\"Sync to Mailchimp\\\"].json.name}}\nstatus=failed\nerror_message={{$node[\\\"Sync to Mailchimp\\\"].json.error}}\nretry_count=0\ncreated_at={{new Date().toISOString()}}\nnext_retry_at={{new Date(Date.now() + 5*60000).toISOString()}}",
+        "options": {}
+      },
+      "id": "5f6a7b8c-9d0e-1f2a-3b4c-5d6e-7f8a-9b0c",
+      "name": "Queue for Retry - Mailchimp",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "sync_retry_queue",
+        "columns": "id,lead_id,integration_type,status,error_message,retry_count,created_at,next_retry_at",
+        "data": "id={{$uuid()}}\nlead_id={{$node[\\\"Store Lead in Supabase\\\"].json[0].id}}\nintegration_type={{$node[\\\"Sync to ConvertKit\\\"].json.name}}\nstatus=failed\nerror_message={{$node[\\\"Sync to ConvertKit\\\"].json.error}}\nretry_count=0\ncreated_at={{new Date().toISOString()}}\nnext_retry_at={{new Date(Date.now() + 5*60000).toISOString()}}",
+        "options": {}
+      },
+      "id": "6a7b8c9d-0e1f-2a3b-4c5d-6e7f-8a9b-0c1d",
+      "name": "Queue for Retry - ConvertKit",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "sync_retry_queue",
+        "columns": "id,lead_id,integration_type,status,error_message,retry_count,created_at,next_retry_at",
+        "data": "id={{$uuid()}}\nlead_id={{$node[\\\"Store Lead in Supabase\\\"].json[0].id}}\nintegration_type={{$node[\\\"Sync to HubSpot\\\"].json.name}}\nstatus=failed\nerror_message={{$node[\\\"Sync to HubSpot\\\"].json.error}}\nretry_count=0\ncreated_at={{new Date().toISOString()}}\nnext_retry_at={{new Date(Date.now() + 5*60000).toISOString()}}",
+        "options": {}
+      },
+      "id": "7b8c9d0e-1f2a-3b4c-5d6e-7f8a-9b0c-1d2e",
+      "name": "Queue for Retry - HubSpot",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        450
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Lead Capture": {
+      "main": [
+        [
+          {
+            "node": "Store Lead in Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Lead in Supabase": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch User Integrations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Email": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch User Integrations": {
+      "main": [
+        [
+          {
+            "node": "Sync to Mailchimp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sync to ConvertKit",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sync to HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync to Mailchimp": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Queue for Retry - Mailchimp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync to ConvertKit": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Queue for Retry - ConvertKit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sync to HubSpot": {
+      "main": [
+        [
+          {
+            "node": "Log Activity",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Queue for Retry - HubSpot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Activity": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": 30,
+    "maxExecutionTime": 30,
+    "saveManualExecutions": true
+  }
+}

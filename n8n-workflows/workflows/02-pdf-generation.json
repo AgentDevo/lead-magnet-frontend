@@ -1,0 +1,205 @@
+{
+  "name": "02 - PDF Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": "public",
+        "table": "lead_magnets",
+        "where": "id = {{$node[\\\"Trigger Input\\\"].json.id}}",
+        "limit": 1
+      },
+      "id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "name": "Fetch Lead Magnet Data",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "url": "http://localhost:3001/api/pdf-generate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+      "name": "Call Backend PDF Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        550,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "binaryProperty": "data",
+        "bucketName": "pdfs",
+        "key": "={{$node[\\\"Fetch Lead Magnet Data\\\"].json[0].id}}.pdf",
+        "options": {}
+      },
+      "id": "3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+      "name": "Upload PDF to Supabase Storage",
+      "type": "n8n-nodes-base.supabaseStorageApi",
+      "typeVersion": 1,
+      "position": [
+        800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": "public",
+        "table": "lead_magnets",
+        "updateKey": "id",
+        "id": "{{$node[\\\"Fetch Lead Magnet Data\\\"].json[0].id}}",
+        "columns": "pdf_url,status,updated_at",
+        "data": "pdf_url=https://storage.supabase.co/object/public/pdfs/{{$node[\\\"Fetch Lead Magnet Data\\\"].json[0].id}}.pdf\nstatus=published\nupdated_at={{new Date().toISOString()}}",
+        "options": {}
+      },
+      "id": "4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a",
+      "name": "Update Supabase",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "{{$node[\\\"Fetch Lead Magnet Data\\\"].json[0].user_email}}",
+        "subject": "Your Lead Magnet is Ready: {{$node[\\\"Fetch Lead Magnet Data\\\"].json[0].title}}",
+        "html": true,
+        "htmlContent": "<h2>Your Lead Magnet is Ready!</h2>\n<p>Hi,</p>\n<p>Your lead magnet <strong>{{$node[\\\"Fetch Lead Magnet Data\\\"].json[0].title}}</strong> has been generated and is ready to download.</p>\n<p><a href='https://storage.supabase.co/object/public/pdfs/{{$node[\\\"Fetch Lead Magnet Data\\\"].json[0].id}}.pdf' style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>Download PDF</a></p>\n<p>This link will be available for 7 days.</p>\n<p>Thanks!</p>",
+        "options": {}
+      },
+      "id": "5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@example.com",
+        "subject": "PDF Generation Failed for {{$node[\\\"Fetch Lead Magnet Data\\\"].json[0].title}}",
+        "html": true,
+        "htmlContent": "<h2>PDF Generation Error</h2>\n<p><strong>Lead Magnet ID:</strong> {{$node[\\\"Fetch Lead Magnet Data\\\"].json[0].id}}</p>\n<p><strong>Error:</strong> {{$node[\\\"Call Backend PDF Endpoint\\\"].json.error}}</p>\n<p><strong>Retry:</strong> This will be retried automatically in 5 minutes.</p>\n<pre>{{JSON.stringify($json, null, 2)}}</pre>",
+        "options": {}
+      },
+      "id": "6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c",
+      "name": "Error - Send Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": "public",
+        "table": "lead_magnets",
+        "updateKey": "id",
+        "id": "{{$node[\\\"Fetch Lead Magnet Data\\\"].json[0].id}}",
+        "columns": "status,updated_at",
+        "data": "status=error\nupdated_at={{new Date().toISOString()}}",
+        "options": {}
+      },
+      "id": "7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d",
+      "name": "Update Status to Error",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1550,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Fetch Lead Magnet Data": {
+      "main": [
+        [
+          {
+            "node": "Call Backend PDF Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Backend PDF Endpoint": {
+      "main": [
+        [
+          {
+            "node": "Upload PDF to Supabase Storage",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error - Send Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload PDF to Supabase Storage": {
+      "main": [
+        [
+          {
+            "node": "Update Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Supabase": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error - Send Notification": {
+      "main": [
+        [
+          {
+            "node": "Update Status to Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": 60,
+    "maxExecutionTime": 60,
+    "saveManualExecutions": true,
+    "retryOnFail": true,
+    "maxRetries": 3,
+    "retryInterval": "5m"
+  }
+}

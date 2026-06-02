@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEVO Mission Control</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">⚡</span>
+                    <span class="logo-text">DEVO</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-section="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-section="agents">
+                    <span class="nav-icon">🤖</span>
+                    <span class="nav-label">Agents</span>
+                </a>
+                <a href="#" class="nav-item" data-section="infrastructure">
+                    <span class="nav-icon">🏗️</span>
+                    <span class="nav-label">Infrastructure</span>
+                </a>
+                <a href="#" class="nav-item" data-section="memory">
+                    <span class="nav-icon">🧠</span>
+                    <span class="nav-label">Memory</span>
+                </a>
+                <a href="#" class="nav-item" data-section="activity">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-label">Activity</span>
+                </a>
+                <a href="#" class="nav-item" data-section="alerts">
+                    <span class="nav-icon">⚠️</span>
+                    <span class="nav-label">Alerts</span>
+                </a>
+                <a href="#" class="nav-item" data-section="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-label">Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h1>Mission Control</h1>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <input type="text" placeholder="Search..." class="search-input">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    <button class="header-btn pause-btn">⏸ Pause</button>
+                    <button class="header-btn ping-btn">🤖 Ping Devo</button>
+                </div>
+            </header>
+
+            <!-- Stats Section -->
+            <div class="stats-section">
+                <div class="stat-card">
+                    <span class="stat-number">12</span>
+                    <span class="stat-label">Active Tasks</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">8</span>
+                    <span class="stat-label">In Progress</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">43</span>
+                    <span class="stat-label">Total Devices</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">92%</span>
+                    <span class="stat-label">Uptime</span>
+                </div>
+            </div>
+
+            <!-- Token & Cost Tracking Section -->
+            <div class="token-cost-section">
+                <div class="token-cost-header">
+                    <h2>💰 Token Usage & Costs</h2>
+                    <button class="btn btn-small" id="refresh-tokens">🔄 Refresh</button>
+                </div>
+                <div class="token-cost-grid" id="token-cost-grid">
+                    <!-- Token/cost cards will be populated here -->
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="action-bar">
+                <button class="btn btn-primary">+ New Task</button>
+                <div class="filters">
+                    <button class="filter-btn active">All</button>
+                    <button class="filter-btn">Gateway</button>
+                    <button class="filter-btn">Agents</button>
+                    <button class="filter-btn">Network</button>
+                </div>
+            </div>
+
+            <!-- Board View -->
+            <div class="board-container">
+                <!-- Active Column -->
+                <div class="board-column">
+                    <div class="column-header">
+                        <span class="column-title">🔄 Active</span>
+                        <span class="column-count">5</span>
+                    </div>
+                    <div class="tasks-list">
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-priority high">●</span>
+                                <span class="task-title">Gateway Health Check</span>
+                            </div>
+                            <p class="task-desc">Monitor port 18789 and RPC endpoints</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Gateway</span>
+                                <span class="task-time">2m ago</span>
+                            </div>
+                        </div>
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-priority high">●</span>
+                                <span class="task-title">Memory Sync</span>
+                            </div>
+                            <p class="task-desc">Synchronize MEMORY.md and daily logs</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Memory</span>
+                                <span class="task-time">5m ago</span>
+                            </div>
+                        </div>
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-priority medium">●</span>
+                                <span class="task-title">Network Scan</span>
+                            </div>
+                            <p class="task-desc">LAN scan for device availability</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Network</span>
+                                <span class="task-time">12m ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Backlog Column -->
+                <div class="board-column">
+                    <div class="column-header">
+                        <span class="column-title">📋 Backlog</span>
+                        <span class="column-count">3</span>
+                    </div>
+                    <div class="tasks-list">
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-priority medium">●</span>
+                                <span class="task-title">GPU Acceleration Setup</span>
+                            </div>
+                            <p class="task-desc">Install CUDA toolkit for QMD performance</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Infrastructure</span>
+                                <span class="task-time">pending</span>
+                            </div>
+                        </div>
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-priority low">●</span>
+                                <span class="task-title">QMD Collections Index</span>
+                            </div>
+                            <p class="task-desc">Add and index document collections</p>
+                            <div class="task-meta">
+                                <span class="task-tag">QMD</span>
+                                <span class="task-time">pending</span>
+                            </div>
+                        </div>
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-priority low">●</span>
+                                <span class="task-title">MCP Server Integration</span>
+                            </div>
+                            <p class="task-desc">Connect QMD with agent systems</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Integration</span>
+                                <span class="task-time">pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- In Progress Column -->
+                <div class="board-column">
+                    <div class="column-header">
+                        <span class="column-title">⚙️ In Progress</span>
+                        <span class="column-count">4</span>
+                    </div>
+                    <div class="tasks-list">
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-priority high">●</span>
+                                <span class="task-title">Daily Log Resume</span>
+                            </div>
+                            <p class="task-desc">Create memory/2026-03-04.md logging pipeline</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Memory</span>
+                                <span class="task-time">in progress</span>
+                            </div>
+                        </div>
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-priority high">●</span>
+                                <span class="task-title">Config Cleanup</span>
+                            </div>
+                            <p class="task-desc">Remove invalid denyCommands from openclaw.json</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Config</span>
+                                <span class="task-time">in progress</span>
+                            </div>
+                        </div>
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-priority medium">●</span>
+                                <span class="task-title">Heartbeat Simplification</span>
+                            </div>
+                            <p class="task-desc">Rewrite HEARTBEAT.md to realistic checklist</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Automation</span>
+                                <span class="task-time">in progress</span>
+                            </div>
+                        </div>
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-priority medium">●</span>
+                                <span class="task-title">Mission Control UI</span>
+                            </div>
+                            <p class="task-desc">Build web dashboard and serve on port 7200</p>
+                            <div class="task-meta">
+                                <span class="task-tag">UI</span>
+                                <span class="task-time">in progress</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completed Column -->
+                <div class="board-column">
+                    <div class="column-header">
+                        <span class="column-title">✅ Completed</span>
+                        <span class="column-count">6</span>
+                    </div>
+                    <div class="tasks-list">
+                        <div class="task-card completed">
+                            <div class="task-header">
+                                <span class="task-priority">✓</span>
+                                <span class="task-title">Workspace Bootstrap</span>
+                            </div>
+                            <p class="task-desc">Initialize SOUL.md, IDENTITY.md, AGENTS.md</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Setup</span>
+                                <span class="task-time">2026-02-20</span>
+                            </div>
+                        </div>
+                        <div class="task-card completed">
+                            <div class="task-header">
+                                <span class="task-priority">✓</span>
+                                <span class="task-title">Infrastructure Mapping</span>
+                            </div>
+                            <p class="task-desc">Document all 43 LAN devices in TOOLS.md</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Network</span>
+                                <span class="task-time">2026-03-01</span>
+                            </div>
+                        </div>
+                        <div class="task-card completed">
+                            <div class="task-header">
+                                <span class="task-priority">✓</span>
+                                <span class="task-title">QMD Engine Setup</span>
+                            </div>
+                            <p class="task-desc">Install QMD binary and initialize database</p>
+                            <div class="task-meta">
+                                <span class="task-tag">QMD</span>
+                                <span class="task-time">2026-02-23</span>
+                            </div>
+                        </div>
+                        <div class="task-card completed">
+                            <div class="task-header">
+                                <span class="task-priority">✓</span>
+                                <span class="task-title">Telegram Alerts</span>
+                            </div>
+                            <p class="task-desc">Deploy lan-scan.sh with alert integration</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Automation</span>
+                                <span class="task-time">2026-03-01</span>
+                            </div>
+                        </div>
+                        <div class="task-card completed">
+                            <div class="task-header">
+                                <span class="task-priority">✓</span>
+                                <span class="task-title">Config Audit</span>
+                            </div>
+                            <p class="task-desc">Full workspace audit and memory review</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Audit</span>
+                                <span class="task-time">2026-03-04</span>
+                            </div>
+                        </div>
+                        <div class="task-card completed">
+                            <div class="task-header">
+                                <span class="task-priority">✓</span>
+                                <span class="task-title">MEMORY.md Update</span>
+                            </div>
+                            <p class="task-desc">Capture 9-day gap and learning</p>
+                            <div class="task-meta">
+                                <span class="task-tag">Memory</span>
+                                <span class="task-time">2026-03-04</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="right-sidebar">
+            <div class="activity-header">
+                <h3>Live Activity</h3>
+            </div>
+            <div class="activity-feed">
+                <div class="activity-item">
+                    <span class="activity-icon">⚡</span>
+                    <div class="activity-content">
+                        <p class="activity-user">Devo</p>
+                        <p class="activity-text">Mission Control dashboard deployed</p>
+                        <span class="activity-time">just now</span>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-icon">🤖</span>
+                    <div class="activity-content">
+                        <p class="activity-user">Memory Curator (Subagent)</p>
+                        <p class="activity-text">MEMORY.md updated with gap analysis</p>
+                        <span class="activity-time">2h ago</span>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-icon">🤖</span>
+                    <div class="activity-content">
+                        <p class="activity-user">Config Cleaner (Subagent)</p>
+                        <p class="activity-text">Removed 6 invalid denyCommands</p>
+                        <span class="activity-time">2h ago</span>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-icon">🤖</span>
+                    <div class="activity-content">
+                        <p class="activity-user">Logging Fixer (Subagent)</p>
+                        <p class="activity-text">Created memory/2026-03-04.md</p>
+                        <span class="activity-time">2h ago</span>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-icon">⚡</span>
+                    <div class="activity-content">
+                        <p class="activity-user">Devo</p>
+                        <p class="activity-text">Infrastructure Mapping completed</p>
+                        <span class="activity-time">1h ago</span>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-icon">🤖</span>
+                    <div class="activity-content">
+                        <p class="activity-user">Network Monitor (Subagent)</p>
+                        <p class="activity-text">LAN scan completed - all devices online</p>
+                        <span class="activity-time">3h ago</span>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-icon">⚡</span>
+                    <div class="activity-content">
+                        <p class="activity-user">Devo</p>
+                        <p class="activity-text">Session started</p>
+                        <span class="activity-time">8h ago</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

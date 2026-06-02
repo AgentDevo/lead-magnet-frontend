@@ -1,0 +1,250 @@
+{
+  "name": "04 - Daily Analytics Summary",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": {
+          "mode": "everyDay",
+          "hour": 0,
+          "minute": 0
+        }
+      },
+      "id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "name": "Cron - 00:00 UTC Daily",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "url": "http://localhost:3001/api/analytics?date={{new Date().toISOString().split('T')[0]}}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+      "name": "Call Backend Analytics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": "public",
+        "table": "leads",
+        "where": "DATE(created_at) = CURRENT_DATE",
+        "limit": 1
+      },
+      "id": "3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+      "name": "Get Today's Leads",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        500,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": "public",
+        "table": "lead_magnets",
+        "where": "user_id = {{$env.USER_ID}}",
+        "orderBy": \"views DESC\",
+        "limit": 5
+      },
+      "id": "4d5e6f7a-8b9c-0d1e-2f3a-4b5c-6d7e-8f9a",
+      "name": "Get Top Magnets",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        750,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "code": "// Calculate statistics\nconst leads = $node['Get Today\\'s Leads'].json.length;\nconst conversions = $node['Call Backend Analytics'].json.conversions || 0;\nconst revenue = $node['Call Backend Analytics'].json.revenue || 0;\nconst topMagnets = $node['Get Top Magnets'].json;\n\nconst conversionRate = leads > 0 ? ((conversions / leads) * 100).toFixed(2) : 0;\nconst topPerformer = topMagnets[0]?.title || 'N/A';\nconst topPerformerViews = topMagnets[0]?.views || 0;\n\nreturn {\n  leads,\n  conversions,\n  revenue,\n  conversionRate,\n  topPerformer,\n  topPerformerViews,\n  topMagnets,\n  date: new Date().toISOString().split('T')[0]\n};"
+      },
+      "id": "5e6f7a8b-9c0d-1e2f-3a4b-5c6d-7e8f9a0b",
+      "name": "Calculate Stats",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "{{$env.USER_EMAIL}}",
+        "subject": "Daily Summary - {{new Date().toISOString().split('T')[0]}}",
+        "html": true,
+        "htmlContent": "<h2>Daily Analytics Summary</h2>\n<p><strong>Date:</strong> {{$node['Calculate Stats'].json.date}}</p>\n\n<h3>Key Metrics</h3>\n<table style='border-collapse: collapse; width: 100%;'>\n  <tr>\n    <td style='padding: 10px; border: 1px solid #ddd;'><strong>Leads</strong></td>\n    <td style='padding: 10px; border: 1px solid #ddd;'>{{$node['Calculate Stats'].json.leads}}</td>\n  </tr>\n  <tr>\n    <td style='padding: 10px; border: 1px solid #ddd;'><strong>Conversions</strong></td>\n    <td style='padding: 10px; border: 1px solid #ddd;'>{{$node['Calculate Stats'].json.conversions}}</td>\n  </tr>\n  <tr>\n    <td style='padding: 10px; border: 1px solid #ddd;'><strong>Conversion Rate</strong></td>\n    <td style='padding: 10px; border: 1px solid #ddd;'>{{$node['Calculate Stats'].json.conversionRate}}%</td>\n  </tr>\n  <tr>\n    <td style='padding: 10px; border: 1px solid #ddd;'><strong>Revenue</strong></td>\n    <td style='padding: 10px; border: 1px solid #ddd;'>${{$node['Calculate Stats'].json.revenue}}</td>\n  </tr>\n</table>\n\n<h3>Top Performer</h3>\n<p><strong>{{$node['Calculate Stats'].json.topPerformer}}</strong> - {{$node['Calculate Stats'].json.topPerformerViews}} views</p>\n\n<h3>Top 5 Lead Magnets</h3>\n<ol>\n{{#each $node['Calculate Stats'].json.topMagnets}}\n  <li>{{this.title}} ({{this.views}} views)</li>\n{{/each}}\n</ol>\n\n<p><a href='https://app.example.com/dashboard' style='background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>View Full Dashboard</a></p>\n<p>Thanks!</p>",
+        "options": {}
+      },
+      "id": "6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c",
+      "name": "Send Summary Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "analytics_summaries",
+        "columns": "id,user_id,date,leads,conversions,conversion_rate,top_magnets,revenue,created_at",
+        "data": "id={{$uuid()}}\nuser_id={{$env.USER_ID}}\ndate={{$node['Calculate Stats'].json.date}}\nleads={{$node['Calculate Stats'].json.leads}}\nconversions={{$node['Calculate Stats'].json.conversions}}\nconversion_rate={{$node['Calculate Stats'].json.conversionRate}}\ntop_magnets={{JSON.stringify($node['Calculate Stats'].json.topMagnets)}}\nrevenue={{$node['Calculate Stats'].json.revenue}}\ncreated_at={{new Date().toISOString()}}",
+        "options": {}
+      },
+      "id": "7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d",
+      "name": "Store Summary in DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "admin@example.com",
+        "subject": "Daily Analytics Error - {{new Date().toISOString().split('T')[0]}}",
+        "html": true,
+        "htmlContent": "<h2>Daily Analytics Failed</h2>\n<p><strong>Error:</strong> Failed to send daily analytics summary</p>\n<p><strong>User ID:</strong> {{$env.USER_ID}}</p>\n<p><strong>Error Details:</strong></p>\n<pre>{{JSON.stringify($json, null, 2)}}</pre>\n<p>This should be investigated and possibly retried manually.</p>",
+        "options": {}
+      },
+      "id": "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e",
+      "name": "Error - Notify Admin",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Cron - 00:00 UTC Daily": {
+      "main": [
+        [
+          {
+            "node": "Call Backend Analytics",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Today's Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Backend Analytics": {
+      "main": [
+        [
+          {
+            "node": "Calculate Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Today's Leads": {
+      "main": [
+        [
+          {
+            "node": "Get Top Magnets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Top Magnets": {
+      "main": [
+        [
+          {
+            "node": "Calculate Stats",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Stats": {
+      "main": [
+        [
+          {
+            "node": "Send Summary Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error - Notify Admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Summary Email": {
+      "main": [
+        [
+          {
+            "node": "Store Summary in DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Summary in DB": {
+      "main": [
+        [
+          {
+            "node": "Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error - Notify Admin": {
+      "main": [
+        [
+          {
+            "node": "Finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "executionTimeout": 1800,
+    "maxExecutionTime": 1800,
+    "saveManualExecutions": true
+  }
+}
