@@ -9,6 +9,9 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <span className="font-bold text-lg tracking-tight">LeadMagnet AI</span>
           <div className="flex items-center gap-3">
+            <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Docs
+            </Link>
             <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Sign in
             </Link>
@@ -235,6 +238,7 @@ export default function Home() {
           <span className="font-bold text-sm">LeadMagnet AI</span>
           <p className="text-xs text-muted-foreground">Built with Next.js + NVIDIA AI</p>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
+            <Link href="/docs" className="hover:text-foreground transition-colors">Docs</Link>
             <Link href="/login" className="hover:text-foreground transition-colors">Sign in</Link>
             <Link href="/signup" className="hover:text-foreground transition-colors">Sign up</Link>
           </div>
