@@ -88,6 +88,8 @@ export const aiApi = {
     api.post<{ success: boolean; data: { content: string } }>('/ai/generate', data),
   extractFromUrl: (data: { url: string; magnetType?: string; tone?: string }) =>
     api.post<{ success: boolean; data: { title: string; magnetType: string; content: string } }>('/ai/extract-from-url', data),
+  refine: (data: { content: string; instruction: string; history?: Array<{ role: string; content: string }> }) =>
+    api.post<{ success: boolean; data: { content: string; summary: string } }>('/ai/refine', data),
 };
 
 // ── Landing Pages ──────────────────────────────────────────────────────────

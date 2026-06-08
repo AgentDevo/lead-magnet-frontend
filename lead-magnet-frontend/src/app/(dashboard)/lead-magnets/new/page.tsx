@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { RefinementChat } from '@/components/ui/refinement-chat';
 
 const TYPE_OPTIONS = [
   { value: 'ebook', label: 'eBook' },
@@ -26,7 +27,7 @@ const TONE_OPTIONS = [
   { value: 'friendly', label: 'Friendly' },
 ];
 
-type Mode = 'generate' | 'url';
+type Mode = 'generate' | 'url' | 'refine';
 
 export default function NewLeadMagnetPage() {
   const [form, setForm] = useState({ title: '', magnetType: 'guide', content: '' });
@@ -35,13 +36,10 @@ export default function NewLeadMagnetPage() {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [mode, setMode] = useState<Mode>('generate');
-
-  // URL extraction state
   const [url, setUrl] = useState('');
   const [extracting, setExtracting] = useState(false);
   const [extractType, setExtractType] = useState('guide');
   const [extractTone, setExtractTone] = useState('professional');
-
   const { toast } = useToast();
   const router = useRouter();
 
@@ -49,15 +47,13 @@ export default function NewLeadMagnetPage() {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   const handleGenerate = async () => {
-    if (!form.title.trim()) {
-      toast({ type: 'error', title: 'Enter a title first' });
-      return;
-    }
+    if (!form.title.trim()) { toast({ type: 'error', title: 'Enter a title first' }); return; }
     setGenerating(true);
     try {
       const res = await aiApi.generate({ title: form.title, magnetType: form.magnetType, audience, tone });
       setForm((prev) => ({ ...prev, content: res.data.data.content }));
       toast({ type: 'success', title: 'Content generated!' });
+      setMode('refine');
     } catch {
       toast({ type: 'error', title: 'Generation failed', description: 'Check that the AI server is reachable.' });
     } finally {
@@ -66,19 +62,16 @@ export default function NewLeadMagnetPage() {
   };
 
   const handleExtract = async () => {
-    if (!url.trim()) {
-      toast({ type: 'error', title: 'Enter a URL first' });
-      return;
-    }
+    if (!url.trim()) { toast({ type: 'error', title: 'Enter a URL first' }); return; }
     setExtracting(true);
     try {
       const res = await aiApi.extractFromUrl({ url: url.trim(), magnetType: extractType, tone: extractTone });
       const { title, magnetType, content } = res.data.data;
       setForm({ title, magnetType, content });
-      toast({ type: 'success', title: 'Extracted!', description: 'Form pre-filled — review and save.' });
+      toast({ type: 'success', title: 'Extracted!', description: 'Form pre-filled — review and refine.' });
+      setMode('refine');
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message
-        ?? 'Could not extract content from that URL.';
+      const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message ?? 'Could not extract content from that URL.';
       toast({ type: 'error', title: 'Extraction failed', description: msg });
     } finally {
       setExtracting(false);
@@ -151,62 +144,37 @@ export default function NewLeadMagnetPage() {
 
         {/* AI sidebar */}
         <div className="w-64 shrink-0 space-y-3">
-
           {/* Mode toggle */}
           <div className="flex rounded-lg border border-border overflow-hidden text-xs font-medium">
-            <button
-              type="button"
-              onClick={() => setMode('generate')}
-              className={`flex-1 py-2 transition-colors ${mode === 'generate' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'}`}
-            >
-              ✨ Generate
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('url')}
-              className={`flex-1 py-2 transition-colors ${mode === 'url' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'}`}
-            >
-              🔗 From URL
-            </button>
+            {([['generate', '✨ Generate'], ['url', '🔗 URL'], ['refine', '💬 Refine']] as [Mode, string][]).map(([m, label]) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                className={`flex-1 py-2 transition-colors ${mode === m ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'}`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Generate panel */}
           {mode === 'generate' && (
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Generate with AI</CardTitle>
-              </CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-sm">Generate with AI</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="audience" className="text-xs">Target audience</Label>
-                  <Input
-                    id="audience"
-                    placeholder="e.g. startup founders"
-                    value={audience}
-                    onChange={(e) => setAudience(e.target.value)}
-                    className="text-xs h-8"
-                  />
+                  <Input id="audience" placeholder="e.g. startup founders" value={audience} onChange={(e) => setAudience(e.target.value)} className="text-xs h-8" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="tone" className="text-xs">Tone</Label>
-                  <Select
-                    id="tone"
-                    options={TONE_OPTIONS}
-                    value={tone}
-                    onChange={(e) => setTone(e.target.value)}
-                    className="text-xs h-8"
-                  />
+                  <Select id="tone" options={TONE_OPTIONS} value={tone} onChange={(e) => setTone(e.target.value)} className="text-xs h-8" />
                 </div>
-                <Button
-                  type="button"
-                  className="w-full"
-                  variant="secondary"
-                  loading={generating}
-                  onClick={handleGenerate}
-                >
+                <Button type="button" className="w-full" variant="secondary" loading={generating} onClick={handleGenerate}>
                   {generating ? 'Generating…' : 'Generate content'}
                 </Button>
-                <p className="text-xs text-muted-foreground">Fills the content field. You can edit afterwards.</p>
+                <p className="text-xs text-muted-foreground">Fills content and switches to Refine tab.</p>
               </CardContent>
             </Card>
           )}
@@ -214,53 +182,37 @@ export default function NewLeadMagnetPage() {
           {/* URL extraction panel */}
           {mode === 'url' && (
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Import from URL</CardTitle>
-              </CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-sm">Import from URL</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="extract-url" className="text-xs">URL</Label>
-                  <Input
-                    id="extract-url"
-                    type="url"
-                    placeholder="https://example.com/blog/post"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    className="text-xs h-8"
-                  />
+                  <Input id="extract-url" type="url" placeholder="https://example.com/blog/post" value={url} onChange={(e) => setUrl(e.target.value)} className="text-xs h-8" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="extract-type" className="text-xs">Output type</Label>
-                  <Select
-                    id="extract-type"
-                    options={TYPE_OPTIONS}
-                    value={extractType}
-                    onChange={(e) => setExtractType(e.target.value)}
-                    className="text-xs h-8"
-                  />
+                  <Select id="extract-type" options={TYPE_OPTIONS} value={extractType} onChange={(e) => setExtractType(e.target.value)} className="text-xs h-8" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="extract-tone" className="text-xs">Tone</Label>
-                  <Select
-                    id="extract-tone"
-                    options={TONE_OPTIONS}
-                    value={extractTone}
-                    onChange={(e) => setExtractTone(e.target.value)}
-                    className="text-xs h-8"
-                  />
+                  <Select id="extract-tone" options={TONE_OPTIONS} value={extractTone} onChange={(e) => setExtractTone(e.target.value)} className="text-xs h-8" />
                 </div>
-                <Button
-                  type="button"
-                  className="w-full"
-                  variant="secondary"
-                  loading={extracting}
-                  onClick={handleExtract}
-                >
+                <Button type="button" className="w-full" variant="secondary" loading={extracting} onClick={handleExtract}>
                   {extracting ? 'Extracting…' : 'Extract & fill form'}
                 </Button>
-                <p className="text-xs text-muted-foreground">
-                  Fetches the page, extracts the content with AI, and pre-fills the title and content fields.
-                </p>
+                <p className="text-xs text-muted-foreground">Fetches the page, extracts content with AI, then switches to Refine tab.</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Refine panel */}
+          {mode === 'refine' && (
+            <Card>
+              <CardHeader className="pb-3"><CardTitle className="text-sm">Refine with AI</CardTitle></CardHeader>
+              <CardContent>
+                <RefinementChat
+                  content={form.content}
+                  onContentChange={(c) => setForm((prev) => ({ ...prev, content: c }))}
+                />
               </CardContent>
             </Card>
           )}

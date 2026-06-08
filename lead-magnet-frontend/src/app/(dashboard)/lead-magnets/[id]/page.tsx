@@ -12,6 +12,7 @@ import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { RefinementChat } from '@/components/ui/refinement-chat';
 
 const TYPE_OPTIONS = [
   { value: 'ebook', label: 'eBook' },
@@ -40,6 +41,8 @@ const STATUS_VARIANT: Record<string, 'success' | 'secondary' | 'outline'> = {
   archived: 'outline',
 };
 
+type SidebarMode = 'generate' | 'refine';
+
 export default function EditLeadMagnetPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -54,6 +57,7 @@ export default function EditLeadMagnetPage() {
   const [generating, setGenerating] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sidebarMode, setSidebarMode] = useState<SidebarMode>('refine');
 
   useEffect(() => {
     magnetApi.get(id).then((res) => {
@@ -70,15 +74,13 @@ export default function EditLeadMagnetPage() {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   const handleGenerate = async () => {
-    if (!form.title.trim()) {
-      toast({ type: 'error', title: 'Enter a title first' });
-      return;
-    }
+    if (!form.title.trim()) { toast({ type: 'error', title: 'Enter a title first' }); return; }
     setGenerating(true);
     try {
       const res = await aiApi.generate({ title: form.title, magnetType: form.magnetType, audience, tone });
       setForm((prev) => ({ ...prev, content: res.data.data.content }));
       toast({ type: 'success', title: 'Content generated!' });
+      setSidebarMode('refine');
     } catch {
       toast({ type: 'error', title: 'Generation failed' });
     } finally {
@@ -144,10 +146,9 @@ export default function EditLeadMagnetPage() {
       </div>
 
       <div className="flex gap-6 items-start">
+        {/* Main form */}
         <Card className="flex-1 max-w-2xl">
-          <CardHeader>
-            <CardTitle>Edit lead magnet</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Edit lead magnet</CardTitle></CardHeader>
           <form onSubmit={handleSave}>
             <CardContent className="space-y-4">
               <div className="space-y-1.5">
@@ -171,58 +172,64 @@ export default function EditLeadMagnetPage() {
             </CardContent>
             <CardFooter className="flex-wrap gap-3">
               <Button type="submit" loading={saving}>Save changes</Button>
-              <Button type="button" variant="outline" loading={generatingPdf} onClick={handleGeneratePdf}>
-                Download PDF
-              </Button>
-              <Button type="button" variant="destructive" loading={deleting} onClick={handleDelete}>
-                Delete
-              </Button>
-              <Link href="/lead-magnets">
-                <Button type="button" variant="ghost">Cancel</Button>
-              </Link>
+              <Button type="button" variant="outline" loading={generatingPdf} onClick={handleGeneratePdf}>Download PDF</Button>
+              <Button type="button" variant="destructive" loading={deleting} onClick={handleDelete}>Delete</Button>
+              <Link href="/lead-magnets"><Button type="button" variant="ghost">Cancel</Button></Link>
             </CardFooter>
           </form>
         </Card>
 
-        <div className="w-64 shrink-0 space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">✨ Generate with AI</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="audience" className="text-xs">Target audience</Label>
-                <Input
-                  id="audience"
-                  placeholder="e.g. startup founders"
-                  value={audience}
-                  onChange={(e) => setAudience(e.target.value)}
-                  className="text-xs h-8"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="tone" className="text-xs">Tone</Label>
-                <Select
-                  id="tone"
-                  options={TONE_OPTIONS}
-                  value={tone}
-                  onChange={(e) => setTone(e.target.value)}
-                  className="text-xs h-8"
-                />
-              </div>
-              <Button
+        {/* Sidebar */}
+        <div className="w-64 shrink-0 space-y-3">
+          {/* Mode toggle */}
+          <div className="flex rounded-lg border border-border overflow-hidden text-xs font-medium">
+            {([['refine', '💬 Refine'], ['generate', '✨ Generate']] as [SidebarMode, string][]).map(([m, label]) => (
+              <button
+                key={m}
                 type="button"
-                className="w-full"
-                variant="secondary"
-                loading={generating}
-                onClick={handleGenerate}
+                onClick={() => setSidebarMode(m)}
+                className={`flex-1 py-2 transition-colors ${sidebarMode === m ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'}`}
               >
-                {generating ? 'Generating…' : 'Regenerate content'}
-              </Button>
-              <p className="text-xs text-muted-foreground">Replaces current content.</p>
-            </CardContent>
-          </Card>
+                {label}
+              </button>
+            ))}
+          </div>
 
+          {/* Refine panel */}
+          {sidebarMode === 'refine' && (
+            <Card>
+              <CardHeader className="pb-3"><CardTitle className="text-sm">Refine with AI</CardTitle></CardHeader>
+              <CardContent>
+                <RefinementChat
+                  content={form.content}
+                  onContentChange={(c) => setForm((prev) => ({ ...prev, content: c }))}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Generate panel */}
+          {sidebarMode === 'generate' && (
+            <Card>
+              <CardHeader className="pb-3"><CardTitle className="text-sm">Regenerate with AI</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="audience" className="text-xs">Target audience</Label>
+                  <Input id="audience" placeholder="e.g. startup founders" value={audience} onChange={(e) => setAudience(e.target.value)} className="text-xs h-8" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tone" className="text-xs">Tone</Label>
+                  <Select id="tone" options={TONE_OPTIONS} value={tone} onChange={(e) => setTone(e.target.value)} className="text-xs h-8" />
+                </div>
+                <Button type="button" className="w-full" variant="secondary" loading={generating} onClick={handleGenerate}>
+                  {generating ? 'Generating…' : 'Regenerate content'}
+                </Button>
+                <p className="text-xs text-muted-foreground">Replaces current content.</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Details card */}
           {magnet && (
             <Card>
               <CardContent className="pt-4 space-y-3 text-sm">
