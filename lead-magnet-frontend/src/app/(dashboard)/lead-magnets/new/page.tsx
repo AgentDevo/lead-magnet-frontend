@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Spinner } from '@/components/ui/spinner';
 
 const TYPE_OPTIONS = [
   { value: 'ebook', label: 'eBook' },
@@ -27,12 +26,22 @@ const TONE_OPTIONS = [
   { value: 'friendly', label: 'Friendly' },
 ];
 
+type Mode = 'generate' | 'url';
+
 export default function NewLeadMagnetPage() {
   const [form, setForm] = useState({ title: '', magnetType: 'guide', content: '' });
   const [audience, setAudience] = useState('');
   const [tone, setTone] = useState('professional');
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [mode, setMode] = useState<Mode>('generate');
+
+  // URL extraction state
+  const [url, setUrl] = useState('');
+  const [extracting, setExtracting] = useState(false);
+  const [extractType, setExtractType] = useState('guide');
+  const [extractTone, setExtractTone] = useState('professional');
+
   const { toast } = useToast();
   const router = useRouter();
 
@@ -53,6 +62,26 @@ export default function NewLeadMagnetPage() {
       toast({ type: 'error', title: 'Generation failed', description: 'Check that the AI server is reachable.' });
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleExtract = async () => {
+    if (!url.trim()) {
+      toast({ type: 'error', title: 'Enter a URL first' });
+      return;
+    }
+    setExtracting(true);
+    try {
+      const res = await aiApi.extractFromUrl({ url: url.trim(), magnetType: extractType, tone: extractTone });
+      const { title, magnetType, content } = res.data.data;
+      setForm({ title, magnetType, content });
+      toast({ type: 'success', title: 'Extracted!', description: 'Form pre-filled — review and save.' });
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error?.message
+        ?? 'Could not extract content from that URL.';
+      toast({ type: 'error', title: 'Extraction failed', description: msg });
+    } finally {
+      setExtracting(false);
     }
   };
 
@@ -84,6 +113,7 @@ export default function NewLeadMagnetPage() {
       </div>
 
       <div className="flex gap-6 items-start">
+        {/* Main form */}
         <Card className="flex-1 max-w-2xl">
           <CardHeader>
             <CardTitle>Create lead magnet</CardTitle>
@@ -99,12 +129,10 @@ export default function NewLeadMagnetPage() {
                 <Select id="magnetType" options={TYPE_OPTIONS} value={form.magnetType} onChange={set('magnetType')} />
               </div>
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="content">Content *</Label>
-                </div>
+                <Label htmlFor="content">Content *</Label>
                 <Textarea
                   id="content"
-                  placeholder="Write your lead magnet content here, or use AI to generate it →"
+                  placeholder="Write your content here, generate with AI, or import from a URL →"
                   value={form.content}
                   onChange={set('content')}
                   className="min-h-[280px] font-mono text-xs"
@@ -121,46 +149,122 @@ export default function NewLeadMagnetPage() {
           </form>
         </Card>
 
-        {/* AI Panel */}
-        <Card className="w-64 shrink-0">
-          <CardHeader>
-            <CardTitle className="text-sm">✨ Generate with AI</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="audience" className="text-xs">Target audience</Label>
-              <Input
-                id="audience"
-                placeholder="e.g. startup founders"
-                value={audience}
-                onChange={(e) => setAudience(e.target.value)}
-                className="text-xs h-8"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="tone" className="text-xs">Tone</Label>
-              <Select
-                id="tone"
-                options={TONE_OPTIONS}
-                value={tone}
-                onChange={(e) => setTone(e.target.value)}
-                className="text-xs h-8"
-              />
-            </div>
-            <Button
+        {/* AI sidebar */}
+        <div className="w-64 shrink-0 space-y-3">
+
+          {/* Mode toggle */}
+          <div className="flex rounded-lg border border-border overflow-hidden text-xs font-medium">
+            <button
               type="button"
-              className="w-full"
-              variant="secondary"
-              loading={generating}
-              onClick={handleGenerate}
+              onClick={() => setMode('generate')}
+              className={`flex-1 py-2 transition-colors ${mode === 'generate' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'}`}
             >
-              {generating ? 'Generating…' : 'Generate content'}
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Fills the content field. You can edit afterwards.
-            </p>
-          </CardContent>
-        </Card>
+              ✨ Generate
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('url')}
+              className={`flex-1 py-2 transition-colors ${mode === 'url' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:text-foreground'}`}
+            >
+              🔗 From URL
+            </button>
+          </div>
+
+          {/* Generate panel */}
+          {mode === 'generate' && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Generate with AI</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="audience" className="text-xs">Target audience</Label>
+                  <Input
+                    id="audience"
+                    placeholder="e.g. startup founders"
+                    value={audience}
+                    onChange={(e) => setAudience(e.target.value)}
+                    className="text-xs h-8"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tone" className="text-xs">Tone</Label>
+                  <Select
+                    id="tone"
+                    options={TONE_OPTIONS}
+                    value={tone}
+                    onChange={(e) => setTone(e.target.value)}
+                    className="text-xs h-8"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  className="w-full"
+                  variant="secondary"
+                  loading={generating}
+                  onClick={handleGenerate}
+                >
+                  {generating ? 'Generating…' : 'Generate content'}
+                </Button>
+                <p className="text-xs text-muted-foreground">Fills the content field. You can edit afterwards.</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* URL extraction panel */}
+          {mode === 'url' && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm">Import from URL</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="extract-url" className="text-xs">URL</Label>
+                  <Input
+                    id="extract-url"
+                    type="url"
+                    placeholder="https://example.com/blog/post"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    className="text-xs h-8"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="extract-type" className="text-xs">Output type</Label>
+                  <Select
+                    id="extract-type"
+                    options={TYPE_OPTIONS}
+                    value={extractType}
+                    onChange={(e) => setExtractType(e.target.value)}
+                    className="text-xs h-8"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="extract-tone" className="text-xs">Tone</Label>
+                  <Select
+                    id="extract-tone"
+                    options={TONE_OPTIONS}
+                    value={extractTone}
+                    onChange={(e) => setExtractTone(e.target.value)}
+                    className="text-xs h-8"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  className="w-full"
+                  variant="secondary"
+                  loading={extracting}
+                  onClick={handleExtract}
+                >
+                  {extracting ? 'Extracting…' : 'Extract & fill form'}
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Fetches the page, extracts the content with AI, and pre-fills the title and content fields.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -86,6 +86,8 @@ export const templateApi = {
 export const aiApi = {
   generate: (data: { title: string; magnetType: string; audience?: string; tone?: string }) =>
     api.post<{ success: boolean; data: { content: string } }>('/ai/generate', data),
+  extractFromUrl: (data: { url: string; magnetType?: string; tone?: string }) =>
+    api.post<{ success: boolean; data: { title: string; magnetType: string; content: string } }>('/ai/extract-from-url', data),
 };
 
 // ── Landing Pages ──────────────────────────────────────────────────────────
