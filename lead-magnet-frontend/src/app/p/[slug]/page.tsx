@@ -1,9 +1,17 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 
+interface AbTest {
+  enabled: boolean;
+  splitPct?: number;
+  variantB?: { title?: string; description?: string; ctaText?: string };
+}
+
 interface PageData {
+  id: string;
+  slug: string;
   title: string;
   description?: string;
   form_config: {
@@ -12,7 +20,17 @@ interface PageData {
     submitLabel: string;
     successMessage: string;
   };
+  page_config?: { abTest?: AbTest };
   lead_magnets?: { title: string; type: string };
+}
+
+function assignVariant(slug: string, splitPct: number): 'a' | 'b' {
+  const key = `ab_variant_${slug}`;
+  const stored = sessionStorage.getItem(key);
+  if (stored === 'a' || stored === 'b') return stored;
+  const variant: 'a' | 'b' = Math.random() * 100 < splitPct ? 'b' : 'a';
+  sessionStorage.setItem(key, variant);
+  return variant;
 }
 
 export default function PublicLandingPage() {
@@ -20,16 +38,52 @@ export default function PublicLandingPage() {
   const searchParams = useSearchParams();
   const [page, setPage] = useState<PageData | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [variant, setVariant] = useState<'a' | 'b'>('a');
   const [form, setForm] = useState({ email: '', fullName: '' });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const viewTracked = useRef(false);
 
   useEffect(() => {
     axios.get(`/api/p/${slug}`)
-      .then((res) => setPage(res.data.data))
+      .then((res) => {
+        const data: PageData = res.data.data;
+        setPage(data);
+
+        const abTest = data.page_config?.abTest;
+        if (abTest?.enabled) {
+          const v = assignVariant(data.slug, abTest.splitPct ?? 50);
+          setVariant(v);
+          if (!viewTracked.current) {
+            viewTracked.current = true;
+            axios.post(`/api/p/${slug}/view`, { variant: v }).catch(() => {});
+          }
+        }
+      })
       .catch(() => setNotFound(true));
   }, [slug]);
+
+  const getContent = () => {
+    if (!page) return { title: '', description: '', ctaText: '', submitLabel: '', successMessage: '' };
+    const ab = page.page_config?.abTest;
+    if (ab?.enabled && variant === 'b' && ab.variantB) {
+      return {
+        title: ab.variantB.title || page.title,
+        description: ab.variantB.description ?? page.description,
+        ctaText: ab.variantB.ctaText || page.form_config.ctaText,
+        submitLabel: page.form_config.submitLabel,
+        successMessage: page.form_config.successMessage,
+      };
+    }
+    return {
+      title: page.title,
+      description: page.description,
+      ctaText: page.form_config.ctaText,
+      submitLabel: page.form_config.submitLabel,
+      successMessage: page.form_config.successMessage,
+    };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +97,7 @@ export default function PublicLandingPage() {
         utmSource: searchParams.get('utm_source') ?? undefined,
         utmMedium: searchParams.get('utm_medium') ?? undefined,
         utmCampaign: searchParams.get('utm_campaign') ?? undefined,
+        variant: page?.page_config?.abTest?.enabled ? variant : undefined,
       });
       setSubmitted(true);
     } catch (err: unknown) {
@@ -72,12 +127,14 @@ export default function PublicLandingPage() {
     );
   }
 
+  const content = getContent();
+
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="max-w-md w-full text-center space-y-4">
           <p className="text-5xl">🎉</p>
-          <h2 className="text-2xl font-bold">{page.form_config.successMessage || 'Thank you!'}</h2>
+          <h2 className="text-2xl font-bold">{content.successMessage || 'Thank you!'}</h2>
           <p className="text-muted-foreground">We will be in touch soon.</p>
         </div>
       </div>
@@ -88,9 +145,9 @@ export default function PublicLandingPage() {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-16">
       <div className="max-w-lg w-full space-y-8">
         <div className="text-center space-y-3">
-          <h1 className="text-4xl font-bold tracking-tight">{page.form_config.ctaText || page.title}</h1>
-          {page.description && (
-            <p className="text-lg text-muted-foreground">{page.description}</p>
+          <h1 className="text-4xl font-bold tracking-tight">{content.ctaText || content.title}</h1>
+          {content.description && (
+            <p className="text-lg text-muted-foreground">{content.description}</p>
           )}
         </div>
 
@@ -137,7 +194,7 @@ export default function PublicLandingPage() {
               disabled={submitting}
               className="w-full h-11 rounded-md bg-accent text-accent-foreground font-semibold text-sm hover:bg-accent/90 disabled:opacity-60 transition-colors"
             >
-              {submitting ? 'Sending...' : (page.form_config.submitLabel || 'Send me the resource')}
+              {submitting ? 'Sending...' : (content.submitLabel || 'Send me the resource')}
             </button>
             <p className="text-xs text-muted-foreground text-center">
               No spam. Unsubscribe at any time.

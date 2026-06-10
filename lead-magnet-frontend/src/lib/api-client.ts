@@ -110,6 +110,16 @@ export interface LandingPage {
   lead_magnets?: { id: string; title: string; type: string };
 }
 
+type AbVariantStats = { views: number; leads: number; cvr: number };
+export interface AbResultsData {
+  enabled: boolean;
+  stats: { a: AbVariantStats; b: AbVariantStats } | null;
+  winner: 'a' | 'b' | null;
+  total: number;
+  minReached: boolean;
+  splitPct: number;
+}
+
 export const landingPageApi = {
   list: () =>
     api.get<{ success: boolean; data: { pages: LandingPage[] } }>('/landing-pages'),
@@ -117,8 +127,10 @@ export const landingPageApi = {
     api.get<{ success: boolean; data: LandingPage }>(`/landing-pages/${id}`),
   create: (data: { leadMagnetId: string; slug: string; title: string; description?: string; ctaText?: string; requireFullName?: boolean }) =>
     api.post<{ success: boolean; data: LandingPage }>('/landing-pages', data),
-  update: (id: string, data: { title?: string; description?: string; ctaText?: string; requireFullName?: boolean; isPublished?: boolean; successMessage?: string }) =>
+  update: (id: string, data: { title?: string; description?: string; ctaText?: string; requireFullName?: boolean; isPublished?: boolean; successMessage?: string; abTestEnabled?: boolean; abTestSplitPct?: number; abTestTitle?: string; abTestDescription?: string; abTestCtaText?: string; abTestResetStats?: boolean }) =>
     api.put<{ success: boolean; data: LandingPage }>(`/landing-pages/${id}`, data),
+  abResults: (id: string) =>
+    api.get<{ success: boolean; data: AbResultsData }>(`/landing-pages/${id}/ab-results`),
   remove: (id: string) =>
     api.delete<{ success: boolean; data: { id: string; deleted: boolean } }>(`/landing-pages/${id}`),
 };
