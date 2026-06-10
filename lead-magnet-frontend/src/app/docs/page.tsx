@@ -122,6 +122,29 @@ export default function DocsPage() {
             </div>
           </section>
 
+          {/* A/B testing */}
+          <section id="ab-testing" className="mb-14 scroll-mt-24">
+            <h2 className="text-2xl font-bold mb-4 pb-2 border-b border-border">{d.abTesting.heading}</h2>
+            <p className="text-muted-foreground mb-4">{d.abTesting.body}</p>
+            <div className="space-y-4 text-sm">
+              <div className="rounded-lg border border-border p-4 bg-secondary/30">
+                <p className="font-semibold mb-2">{d.abTesting.enableHeading}</p>
+                <ol className="text-muted-foreground space-y-1 list-decimal list-inside">
+                  {d.abTesting.enableSteps.map((step, i) => <li key={i}>{step}</li>)}
+                </ol>
+              </div>
+              <div className="rounded-lg border border-border p-4 bg-secondary/30">
+                <p className="font-semibold mb-1">{d.abTesting.resultsHeading}</p>
+                <p className="text-muted-foreground">{d.abTesting.resultsBody}</p>
+              </div>
+              <div className="rounded-lg border border-border p-4 bg-secondary/30">
+                <p className="font-semibold mb-1">{d.abTesting.winnerHeading}</p>
+                <p className="text-muted-foreground">{d.abTesting.winnerBody}</p>
+              </div>
+              <p className="text-sm text-muted-foreground italic">{d.abTesting.resetNote}</p>
+            </div>
+          </section>
+
           {/* Leads */}
           <section id="leads" className="mb-14 scroll-mt-24">
             <h2 className="text-2xl font-bold mb-4 pb-2 border-b border-border">{d.leadsSection.heading}</h2>
