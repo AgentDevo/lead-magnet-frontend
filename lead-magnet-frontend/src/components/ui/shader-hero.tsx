@@ -1,6 +1,6 @@
 'use client';
 import { useRef } from 'react';
-import { MeshGradient, PulsingBorder } from '@paper-design/shaders-react';
+import { PulsingBorder } from '@paper-design/shaders-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
@@ -14,7 +14,7 @@ export default function ShaderHero({ t }: { t: T }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-black relative overflow-hidden">
+    <div ref={containerRef} className="min-h-screen bg-transparent relative overflow-hidden">
       <svg className="absolute inset-0 w-0 h-0">
         <defs>
           <filter id="glass-effect" x="-50%" y="-50%" width="200%" height="200%">
@@ -43,17 +43,6 @@ export default function ShaderHero({ t }: { t: T }) {
           </filter>
         </defs>
       </svg>
-
-      <MeshGradient
-        className="absolute inset-0 w-full h-full"
-        colors={['#000000', '#06b6d4', '#0891b2', '#164e63', '#f97316']}
-        speed={0.3}
-      />
-      <MeshGradient
-        className="absolute inset-0 w-full h-full opacity-60"
-        colors={['#000000', '#ffffff', '#06b6d4', '#f97316']}
-        speed={0.2}
-      />
 
       {/* Header */}
       <header className="relative z-20 flex items-center justify-between p-6">
