@@ -1,8 +1,10 @@
 'use client';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useLanguage } from '@/lib/i18n';
-import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import DisplayCards from '@/components/ui/display-cards';
+
+const ShaderHero = dynamic(() => import('@/components/ui/shader-hero'), { ssr: false });
 
 const FEATURE_ICONS = [
   <svg key="ai" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>,
@@ -29,51 +31,13 @@ export default function Home() {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="bg-background text-foreground">
 
-      {/* Nav */}
-      <nav className="border-b border-border">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="font-bold text-lg tracking-tight">LeadMagnet AI</span>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
-            <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              {t.nav.docs}
-            </Link>
-            <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              {t.nav.signIn}
-            </Link>
-            <Link href="/signup" className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-4 hover:bg-primary/90 transition-colors">
-              {t.nav.getStarted}
-            </Link>
-          </div>
-        </div>
-      </nav>
-
-      {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-xs text-muted-foreground mb-8">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent"></span>
-          {t.hero.badge}
-        </div>
-        <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-tight mb-6">
-          {t.hero.h1a}<br />
-          <span className="text-accent">{t.hero.h1b}</span>
-        </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">{t.hero.sub}</p>
-        <div className="flex items-center justify-center gap-4 flex-wrap">
-          <Link href="/signup" className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-11 px-8 hover:bg-primary/90 transition-colors">
-            {t.hero.cta1}
-          </Link>
-          <Link href="/login" className="inline-flex items-center justify-center rounded-md border border-input bg-background text-sm font-medium h-11 px-8 hover:bg-secondary transition-colors">
-            {t.hero.cta2}
-          </Link>
-        </div>
-        <p className="mt-4 text-xs text-muted-foreground">{t.hero.noCard}</p>
-      </section>
+      {/* Shader Hero — includes Nav */}
+      <ShaderHero t={t} />
 
       {/* Dashboard preview */}
-      <section className="max-w-5xl mx-auto px-6 pb-24">
+      <section className="max-w-5xl mx-auto px-6 py-24">
         <div className="rounded-xl border border-border bg-secondary/40 overflow-hidden shadow-lg">
           <div className="border-b border-border bg-secondary/60 px-4 py-3 flex items-center gap-2">
             <div className="h-3 w-3 rounded-full bg-destructive/50"></div>
