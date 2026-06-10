@@ -90,6 +90,8 @@ export const aiApi = {
     api.post<{ success: boolean; data: { title: string; magnetType: string; content: string } }>('/ai/extract-from-url', data),
   refine: (data: { content: string; instruction: string; history?: Array<{ role: string; content: string }> }) =>
     api.post<{ success: boolean; data: { content: string; summary: string } }>('/ai/refine', data),
+  generatePageCopy: (data: { title: string; type?: string }) =>
+    api.post<{ success: boolean; data: { headline: string; subheadline: string; ctaText: string } }>('/ai/generate-page-copy', data),
 };
 
 // ── Landing Pages ──────────────────────────────────────────────────────────

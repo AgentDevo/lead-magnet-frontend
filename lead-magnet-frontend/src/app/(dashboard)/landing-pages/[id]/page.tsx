@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { landingPageApi, LandingPage } from '@/lib/api-client';
+import { landingPageApi, aiApi, LandingPage } from '@/lib/api-client';
 import { useToast } from '@/components/providers/toast-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ export default function EditLandingPagePage() {
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
 
   useEffect(() => {
     landingPageApi.get(id).then((res) => {
@@ -84,6 +85,20 @@ export default function EditLandingPagePage() {
     } catch {
       toast({ type: 'error', title: 'Delete failed' });
       setDeleting(false);
+    }
+  };
+
+  const handleRegenerate = async () => {
+    if (!page?.lead_magnets) return;
+    setRegenerating(true);
+    try {
+      const res = await aiApi.generatePageCopy({ title: page.lead_magnets.title, type: page.lead_magnets.type });
+      const { headline, subheadline, ctaText } = res.data.data;
+      setForm((prev) => ({ ...prev, title: headline, description: subheadline, ctaText }));
+    } catch {
+      // handled by toast below
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -147,6 +162,7 @@ export default function EditLandingPagePage() {
                 {page?.is_published ? 'Unpublish' : 'Publish'}
               </Button>
               <Button type="button" variant="ghost" onClick={copyLink}>Copy link</Button>
+              <Button type="button" variant="outline" loading={regenerating} onClick={handleRegenerate} disabled={!page?.lead_magnets}>Regenerate copy</Button>
               <Button type="button" variant="destructive" loading={deleting} onClick={handleDelete}>Delete</Button>
               <Link href="/landing-pages">
                 <Button type="button" variant="ghost">Cancel</Button>
