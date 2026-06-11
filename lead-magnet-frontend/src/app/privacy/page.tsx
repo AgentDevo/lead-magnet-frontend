@@ -9,7 +9,7 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-background text-foreground">
       <nav className="border-b border-border">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center">
-          <Link href="/" className="font-bold text-lg tracking-tight">LeadMagnet AI</Link>
+          <Link href="/signup" className="font-bold text-lg tracking-tight">LeadMagnet AI</Link>
         </div>
       </nav>
 
@@ -106,7 +106,7 @@ export default function PrivacyPage() {
         </section>
 
         <div className="pt-4 border-t border-border">
-          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link href="/signup" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             ← Back to LeadMagnet AI
           </Link>
         </div>
