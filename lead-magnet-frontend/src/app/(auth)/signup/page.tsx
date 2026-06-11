@@ -15,6 +15,7 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const { signup } = useAuth();
   const router = useRouter();
 
@@ -22,6 +23,7 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!privacyAccepted) { setError('Please accept the Privacy Policy to continue.'); return; }
     if (!fullName || !email || !password) { setError('Please fill in all fields.'); return; }
     if (!validateEmail(email)) { setError('Please enter a valid email address.'); return; }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
@@ -111,11 +113,28 @@ export default function SignupPage() {
             />
           </div>
 
+          <div className="flex items-start gap-3 pt-1">
+            <input
+              id="privacyAccepted"
+              type="checkbox"
+              required
+              checked={privacyAccepted}
+              onChange={(e) => setPrivacyAccepted(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-gray-800 cursor-pointer"
+            />
+            <label htmlFor="privacyAccepted" className="text-xs text-gray-500 leading-relaxed cursor-pointer">
+              I have read and accept the{' '}
+              <Link href="/privacy" target="_blank" className="text-blue-500 hover:underline font-medium">
+                Privacy Policy
+              </Link>
+            </label>
+          </div>
+
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !privacyAccepted}
             className="w-full bg-gradient-to-b from-gray-700 to-gray-900 text-white font-medium py-2 rounded-xl shadow hover:brightness-105 disabled:opacity-60 cursor-pointer transition mt-1"
           >
             {loading ? 'Creating account…' : 'Get Started'}
@@ -131,7 +150,7 @@ export default function SignupPage() {
         <div className="flex gap-3 w-full justify-center">
           <button
             onClick={() => handleOAuth('google')}
-            disabled={oauthLoading !== null}
+            disabled={oauthLoading !== null || !privacyAccepted}
             title="Sign up with Google"
             className="flex items-center justify-center w-12 h-12 rounded-xl border bg-white hover:bg-gray-100 disabled:opacity-50 transition grow"
           >
@@ -141,7 +160,7 @@ export default function SignupPage() {
           </button>
           <button
             onClick={() => handleOAuth('facebook')}
-            disabled={oauthLoading !== null}
+            disabled={oauthLoading !== null || !privacyAccepted}
             title="Sign up with Facebook"
             className="flex items-center justify-center w-12 h-12 rounded-xl border bg-white hover:bg-gray-100 disabled:opacity-50 transition grow"
           >
@@ -151,7 +170,7 @@ export default function SignupPage() {
           </button>
           <button
             onClick={() => handleOAuth('apple')}
-            disabled={oauthLoading !== null}
+            disabled={oauthLoading !== null || !privacyAccepted}
             title="Sign up with Apple"
             className="flex items-center justify-center w-12 h-12 rounded-xl border bg-white hover:bg-gray-100 disabled:opacity-50 transition grow"
           >
