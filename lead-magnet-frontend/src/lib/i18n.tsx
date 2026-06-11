@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useContext, useEffect, useState } from 'react';
 
-export type Lang = 'en' | 'fr' | 'nl';
+export type Lang = 'en' | 'fr' | 'nl' | 'es';
 
 export const translations = {
   en: {
@@ -567,6 +567,194 @@ export const translations = {
       },
     },
   },
+
+  es: {
+    nav: {
+      docs: 'Documentación',
+      signIn: 'Iniciar sesión',
+      getStarted: 'Comenzar gratis',
+    },
+    hero: {
+      badge: 'Impulsado por NVIDIA gpt-oss-120b',
+      h1a: 'Genera lead magnets',
+      h1b: 'en segundos con IA',
+      sub: 'Crea eBooks, checklists, guías y plantillas. Publica una página de captura. Captura leads. Todo en un lugar — sin diseñadores ni redactores.',
+      cta1: 'Comenzar gratis',
+      cta2: 'Iniciar sesión',
+      noCard: 'Sin tarjeta de crédito requerida',
+    },
+    preview: {
+      magnets: 'Lead magnets',
+      leads: 'Leads totales',
+      cvr: 'Tasa de conversión',
+      recent: 'Lead magnets recientes',
+      statuses: { Active: 'Activo', Draft: 'Borrador' } as Record<string, string>,
+    },
+    features: {
+      heading: 'Todo lo que necesitas para capturar leads',
+      sub: 'Desde la generación de contenido con IA hasta páginas de destino publicadas — el embudo completo en una sola herramienta.',
+      items: [
+        { title: 'Generación de contenido con IA', desc: 'Describe tu audiencia y tono. Obtén un eBook, checklist o guía completamente escrito en menos de 20 segundos.' },
+        { title: 'Páginas de destino instantáneas', desc: 'Publica una página optimizada para conversión con un slug personalizado en un clic. Sin habilidades de diseño.' },
+        { title: 'Captura de leads & CRM', desc: 'Cada envío de formulario se almacena, etiqueta con la fuente UTM y está disponible para exportar o entregar por webhook.' },
+        { title: 'Entrega automática de PDF', desc: 'El contenido generado se convierte en un PDF con estilo y se envía automáticamente por correo a cada nuevo lead.' },
+        { title: 'Analíticas & seguimiento UTM', desc: 'Consulta vistas de página, recuento de leads, tasas de conversión y las mejores fuentes de tráfico — por página de destino.' },
+        { title: 'Webhooks & integraciones', desc: 'Envía nuevos leads a tu CRM, plataforma de correo o Zapier en tiempo real mediante webhooks configurables.' },
+      ],
+    },
+    howItWorks: {
+      heading: 'Cómo funciona',
+      sub: 'Tres pasos de la idea a la captura de leads en vivo.',
+      steps: [
+        { title: 'Describe tu lead magnet', desc: 'Elige un tipo (checklist, guía, eBook), ingresa un título y audiencia objetivo. La IA escribe todo el contenido.' },
+        { title: 'Publica una página de destino', desc: 'Un clic crea una página pública en tu slug personalizado con un formulario de captura ya adjunto.' },
+        { title: 'Observa cómo llegan los leads', desc: 'Cada envío se registra, el PDF se envía al lead y recibes una notificación al instante.' },
+      ],
+    },
+    cta: {
+      heading: '¿Listo para hacer crecer tu lista?',
+      sub: 'Crea tu primer lead magnet generado por IA en menos de dos minutos. Gratis para empezar.',
+      button: 'Comenzar gratis',
+    },
+    footer: {
+      built: 'Creado con Next.js + NVIDIA AI',
+      home: 'Inicio',
+      docs: 'Documentación',
+      signIn: 'Iniciar sesión',
+      signUp: 'Registrarse',
+    },
+    docs: {
+      nav: 'En esta página',
+      tag: 'Documentación',
+      heading: 'Cómo usar LeadMagnet AI',
+      sub: 'Todo lo que necesitas para pasar de la idea a la captura de leads — en menos de cinco minutos.',
+      sections: [
+        { id: 'getting-started', label: 'Primeros pasos' },
+        { id: 'create-lead-magnet', label: 'Crear un lead magnet' },
+        { id: 'ai-generation', label: 'Generación de contenido con IA' },
+        { id: 'landing-pages', label: 'Páginas de destino' },
+        { id: 'leads', label: 'Leads & captura' },
+        { id: 'pdf-delivery', label: 'Entrega de PDF' },
+        { id: 'analytics', label: 'Analíticas & UTM' },
+        { id: 'webhooks', label: 'Webhooks' },
+        { id: 'ab-testing', label: 'Pruebas A/B' },
+      ],
+      gettingStarted: {
+        heading: 'Primeros pasos',
+        body: 'LeadMagnet AI te permite crear lead magnets escritos por IA (eBooks, checklists, guías, plantillas), publicar una página de captura y recibir cada envío automáticamente.',
+        steps: [
+          'Regístrate en /signup — sin tarjeta de crédito.',
+          'Crea tu primer lead magnet con el generador de IA.',
+          'Publica una página de destino vinculada a ese lead magnet.',
+          'Comparte la URL y observa cómo llegan los leads.',
+        ],
+      },
+      createMagnet: {
+        heading: 'Crear un lead magnet',
+        body: 'Ve a Lead Magnets → Nuevo en el panel de control.',
+        fields: [
+          { name: 'Título', desc: 'El nombre de tu lead magnet. Se convierte en el titular del PDF y la página de destino. Sé específico — ej. "10 Plantillas de Correo Frío para Fundadores SaaS".' },
+          { name: 'Tipo', desc: 'Elige el formato que mejor se adapte a tu contenido:', types: [
+            { name: 'eBook', desc: 'contenido largo con múltiples capítulos, intro y conclusión' },
+            { name: 'Checklist', desc: '10–15 elementos accionables agrupados por sección' },
+            { name: 'Guía', desc: 'tutorial paso a paso con instrucciones numeradas' },
+            { name: 'Plantilla', desc: 'documento con espacios para completar y secciones de marcador de posición' },
+            { name: 'Registro de webinar', desc: 'agenda, resultados y marcador de posición para la bio del ponente' },
+          ]},
+          { name: 'Contenido', desc: 'Escribe tu propio contenido, pega texto existente o usa el panel de IA a la derecha para generarlo automáticamente. Se admite HTML.' },
+        ],
+      },
+      aiGeneration: {
+        heading: 'Generación de contenido con IA',
+        body: 'El panel de IA en la página de nuevo lead magnet genera contenido completo y estructurado en un clic. Usa NVIDIA gpt-oss-120b — normalmente devuelve el contenido en 15–25 segundos.',
+        fields: [
+          { name: 'Audiencia objetivo', desc: 'Para quién es este lead magnet. Sé específico: "Fundadores de SaaS B2B en ronda seed" produce mejores resultados que "startups".' },
+          { name: 'Tono', desc: 'Profesional, Casual, Autoritativo o Amigable. Por defecto: Profesional.' },
+        ],
+        tip: { heading: 'Consejo', body: 'Después de generar, puedes editar libremente el contenido en el área de texto antes de guardar. El resultado de la IA es un punto de partida, no es definitivo.' },
+      },
+      landingPages: {
+        heading: 'Páginas de destino',
+        body: 'Ve a Páginas de destino → Nueva. Cada página de destino está vinculada a un lead magnet.',
+        fields: [
+          { name: 'Slug', desc: 'La ruta URL de tu página: tudominio.com/p/tu-slug. Usa solo letras minúsculas y guiones. Debe ser único.' },
+          { name: 'Texto del CTA', desc: 'La etiqueta del botón de descarga. Por defecto "Acceso gratuito". Prueba texto orientado a la acción como "Descargar el checklist".' },
+          { name: 'Publicado', desc: 'Las páginas no publicadas devuelven 404 a los visitantes. Activa cuando estés listo para compartir el enlace.' },
+          { name: 'Texto con IA', desc: 'Cuando seleccionas un lead magnet, el titular, subtítulo y texto del CTA se generan automáticamente con IA. Edítalos antes de guardar.' },
+          { name: 'Regenerar texto', desc: 'En la página de edición, el botón Regenerar texto reescribe los tres campos de copia desde cero usando el título del lead magnet.' },
+        ],
+        urlLabel: 'Formato de URL pública',
+      },
+      leadsSection: {
+        heading: 'Leads & captura',
+        body1: 'Cada visitante que envía el formulario en una página de destino se convierte en un lead. El formulario recopila correo electrónico, nombre completo opcional y consentimiento RGPD.',
+        body2: 'Consulta todos los leads capturados en Leads en la barra lateral. Puedes filtrar por página de destino.',
+        recorded: 'Qué se registra por lead',
+        items: [
+          'Correo electrónico y nombre completo',
+          'Qué página de destino enviaron',
+          'Parámetros UTM (fuente, medio, campaña) de la URL',
+          'Estado de la casilla de consentimiento RGPD',
+          'Marca de tiempo del envío',
+        ],
+      },
+      pdfDelivery: {
+        heading: 'Entrega de PDF',
+        body1: 'Cuando un lead envía el formulario, el backend genera automáticamente un PDF con estilo a partir del contenido del lead magnet y lo envía por correo a la dirección del lead.',
+        body2: 'También puedes generar y descargar manualmente un PDF desde la página de detalle del lead magnet usando el botón Descargar PDF.',
+        noteHeading: 'La entrega por correo requiere Resend',
+        noteBody: 'Los correos PDF se envían a través de Resend. La variable de entorno RESEND_API_KEY debe estar configurada en el backend. El plan gratuito cubre 3.000 correos/mes.',
+      },
+      analytics: {
+        heading: 'Analíticas & seguimiento UTM',
+        body: 'La página de Analíticas muestra estadísticas por página de destino y totales agregados.',
+        metricsHeading: 'Métricas rastreadas',
+        metrics: [
+          { name: 'Vistas de página', desc: 'cada visita a /p/slug incrementa el contador' },
+          { name: 'Leads', desc: 'número de envíos de formulario exitosos' },
+          { name: 'Tasa de conversión', desc: 'leads ÷ vistas × 100' },
+          { name: 'Mejor fuente', desc: 'la fuente UTM que generó más leads' },
+        ],
+        utmHeading: 'Parámetros UTM',
+        utmBody: 'Añade parámetros UTM a las URLs de tu página de destino para rastrear fuentes de tráfico:',
+      },
+      webhooks: {
+        heading: 'Webhooks',
+        body: 'Los webhooks te permiten enviar datos de nuevos leads a sistemas externos (CRMs, plataformas de correo, Zapier, Make) en tiempo real. Confíguralos en Webhooks en la barra lateral.',
+        setupHeading: 'Configuración',
+        setupSteps: [
+          'Haz clic en Nuevo webhook e ingresa la URL de tu endpoint.',
+          'Selecciona los eventos a los que deseas suscribirte (ej. lead.created).',
+          'Guarda — el webhook se activa en el próximo evento correspondiente.',
+        ],
+        payloadHeading: 'Payload (lead.created)',
+        securityHeading: 'Seguridad',
+        securityBody: 'Cada webhook tiene un secreto. El backend firma cada solicitud con un encabezado X-Webhook-Secret — verifícalo en tu endpoint para rechazar solicitudes falsificadas.',
+      },
+      abTesting: {
+        heading: 'Pruebas A/B',
+        body: 'Prueba dos variantes del texto de tu página de destino para encontrar cuál convierte mejor. Sin configuración adicional — todos los datos se almacenan por página.',
+        enableHeading: 'Cómo configurar una prueba',
+        enableSteps: [
+          'Abre una página de destino y localiza la tarjeta de Prueba A/B.',
+          'Activa el interruptor.',
+          'Ingresa titular, subtítulo y texto CTA alternativos para la Variante B — o haz clic en Generar con IA.',
+          'Establece la división de tráfico (50/50 por defecto) y haz clic en Guardar prueba.',
+          'Publica la página — los visitantes se asignan aleatoriamente a la Variante A o B y permanecen en esa variante durante la sesión.',
+        ],
+        resultsHeading: 'Lectura de resultados',
+        resultsBody: 'La tarjeta de Resultados muestra vistas, leads y tasa de conversión por variante. Haz clic en Actualizar para refrescar los datos.',
+        winnerHeading: 'Detección del ganador',
+        winnerBody: 'Se declara un ganador automáticamente cuando ambas variantes alcanzan 50 vistas y una tiene una tasa de conversión 20% mayor, o ambas alcanzan 30 leads y una tiene una tasa 15% mayor.',
+        resetNote: 'Usa Restablecer estadísticas para iniciar un nuevo experimento sin cambiar el texto.',
+      },
+      docsCta: {
+        heading: '¿Listo para empezar?',
+        sub: 'Crea tu primer lead magnet en menos de dos minutos.',
+        button: 'Comenzar gratis',
+      },
+    },
+  },
 } as const;
 
 export type Translations = typeof translations.en;
@@ -578,7 +766,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem('lang') as Lang | null;
-    if (stored && ['en', 'fr', 'nl'].includes(stored)) setLangState(stored);
+    if (stored && ['en', 'fr', 'nl', 'es'].includes(stored)) setLangState(stored);
   }, []);
 
   const setLang = (l: Lang) => {
