@@ -37,6 +37,8 @@ export default function LeadsPage() {
   const [filterPageId, setFilterPageId] = useState('');
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     landingPageApi.list().then((res) => setPages(res.data.data.pages)).catch(() => {});
@@ -76,6 +78,21 @@ export default function LeadsPage() {
       toast({ type: 'error', title: 'Export failed' });
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleDeleteConfirm = async (id: string) => {
+    setDeletingId(id);
+    setConfirmId(null);
+    try {
+      await leadsApi.remove(id);
+      setLeads((prev) => prev.filter((l) => l.id !== id));
+      setTotal((t) => t - 1);
+      toast({ type: 'success', title: 'Lead deleted' });
+    } catch {
+      toast({ type: 'error', title: 'Failed to delete lead' });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -143,6 +160,7 @@ export default function LeadsPage() {
                   <th className="text-left px-4 py-3 font-medium">Landing page</th>
                   <th className="text-left px-4 py-3 font-medium">Source</th>
                   <th className="text-left px-4 py-3 font-medium">Date</th>
+                  <th className="px-4 py-3 font-medium w-10"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -159,6 +177,33 @@ export default function LeadsPage() {
                     <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                       {new Date(lead.created_at).toLocaleDateString()}{' '}
                       {new Date(lead.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {confirmId === lead.id ? (
+                        <span className="flex items-center gap-1 justify-end">
+                          <button
+                            onClick={() => handleDeleteConfirm(lead.id)}
+                            disabled={deletingId === lead.id}
+                            className="text-xs text-destructive hover:underline disabled:opacity-50"
+                          >
+                            {deletingId === lead.id ? '…' : 'Confirm'}
+                          </button>
+                          <span className="text-muted-foreground text-xs">·</span>
+                          <button onClick={() => setConfirmId(null)} className="text-xs text-muted-foreground hover:text-foreground">
+                            Cancel
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmId(lead.id)}
+                          title="Delete lead (GDPR erasure)"
+                          className="text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -177,6 +222,10 @@ export default function LeadsPage() {
               </div>
             </div>
           )}
+
+          <p className="text-xs text-muted-foreground mt-4">
+            To honour a GDPR erasure request, delete the lead using the trash icon. This permanently removes all personal data for that submission.
+          </p>
         </>
       )}
     </div>

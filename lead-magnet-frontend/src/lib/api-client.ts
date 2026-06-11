@@ -155,6 +155,8 @@ export const leadsApi = {
     api.get<{ success: boolean; data: { leads: Lead[]; total: number; page: number; limit: number } }>(
       "/leads", { params }
     ),
+  remove: (id: string) =>
+    api.delete<{ success: boolean; data: { id: string; deleted: boolean } }>(`/leads/${id}`),
 };
 
 // -- Analytics --------------------------------------------------------------

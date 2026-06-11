@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import axios from 'axios';
 
 interface AbTest {
@@ -39,7 +40,7 @@ export default function PublicLandingPage() {
   const [page, setPage] = useState<PageData | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [variant, setVariant] = useState<'a' | 'b'>('a');
-  const [form, setForm] = useState({ email: '', fullName: '' });
+  const [form, setForm] = useState({ email: '', fullName: '', gdprConsent: false });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -87,6 +88,10 @@ export default function PublicLandingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.gdprConsent) {
+      setError('Please accept the privacy policy to continue.');
+      return;
+    }
     setSubmitting(true);
     setError('');
     try {
@@ -188,10 +193,31 @@ export default function PublicLandingPage() {
                 className="w-full h-10 rounded-md border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-accent/50"
               />
             </div>
+
+            {/* GDPR consent — explicit opt-in required by EU law */}
+            <div className="flex items-start gap-3 pt-1">
+              <input
+                id="gdprConsent"
+                type="checkbox"
+                required
+                checked={form.gdprConsent}
+                onChange={(e) => setForm((f) => ({ ...f, gdprConsent: e.target.checked }))}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-accent cursor-pointer"
+              />
+              <label htmlFor="gdprConsent" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                I agree to receive the requested resource and related communications. My data will be processed in
+                accordance with the{' '}
+                <Link href="/privacy" target="_blank" className="underline hover:text-foreground transition-colors">
+                  Privacy Policy
+                </Link>
+                . I can withdraw consent at any time.
+              </label>
+            </div>
+
             {error && <p className="text-sm text-destructive">{error}</p>}
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !form.gdprConsent}
               className="w-full h-11 rounded-md bg-accent text-accent-foreground font-semibold text-sm hover:bg-accent/90 disabled:opacity-60 transition-colors"
             >
               {submitting ? 'Sending...' : (content.submitLabel || 'Send me the resource')}
