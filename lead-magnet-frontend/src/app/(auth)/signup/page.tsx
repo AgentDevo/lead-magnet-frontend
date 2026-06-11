@@ -1,7 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserPlus, Lock, Mail, User } from 'lucide-react';
+import { UserPlus, Lock, Mail, User, X } from 'lucide-react';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase-browser';
 
@@ -52,7 +53,10 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-white rounded-xl z-1">
-      <div className="w-full max-w-sm bg-gradient-to-b from-sky-50/50 to-white rounded-3xl shadow-xl p-8 flex flex-col items-center border border-blue-100 text-black">
+      <div className="relative w-full max-w-sm bg-gradient-to-b from-sky-50/50 to-white rounded-3xl shadow-xl p-8 flex flex-col items-center border border-blue-100 text-black">
+        <Link href="/" className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition" title="Back to home">
+          <X className="w-5 h-5" />
+        </Link>
 
         <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-white mb-6 shadow-lg">
           <UserPlus className="w-7 h-7 text-black" />
